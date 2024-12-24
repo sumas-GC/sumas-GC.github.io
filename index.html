@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Juego de Sumas</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      background-image: url('navidad.gif');
+      background-size: cover;
+      background-position: center;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #container {
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    #pregunta {
+      font-size: 32px;
+      margin-bottom: 20px;
+      color: #ffcc00;
+    }
+
+    #respuesta {
+      width: 100px;
+      padding: 10px;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    #boton {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #boton:hover {
+      background-color: #45a049;
+    }
+
+    #boton-pausar {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #ff5733;
+      color: white;
+      border: 2px solid #ffcc00;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 20px;
+    }
+
+    #boton-pausar:hover {
+      background-color: #ff4500;
+    }
+
+    #resultado, #puntuacion, #temporizador {
+      margin-top: 20px;
+      font-size: 24px;
+    }
+
+    #temporizador {
+      font-size: 24px;
+      color: green; /* Color verde para el temporizador */
+    }
+
+    #contador {
+      font-size: 20px;
+      color: #ffcc00;
+      display: none; /* Ocultar inicialmente */
+    }
+
+    .incorrecto {
+      color: red; /* Color rojo para incorrecto */
+      font-weight: bold; /* Negrita para incorrecto */
+    }
+  </style>
+</head>
+<body>
+
+  <audio id="musica" loop>
+    <source src="krampus.mp3" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+  </audio>
+
+  <audio id="sonido-correcto">
+    <source src="correcto.mp3" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+  </audio>
+
+  <audio id="sonido-incorrecto">
+    <source src="incorrecto.mp3" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+  </audio>
+
+  <div id="container">
+    <img src="img/logo.png" alt="Logo" style="max-width: 100%; height: auto; margin-bottom: 20px;">
+    <h1 id="pregunta"></h1>
+    <input type="number" id="respuesta" placeholder="Tu respuesta" autofocus>
+    <button id="boton">Comprobar</button>
+    <button id="boton-pausar">Pausar Música</button>
+    <div id="resultado"></div> <!-- Aquí se mostrará el resultado -->
+    <div id="puntuacion">Puntuación: 0</div>
+    <div id="temporizador">Tiempo restante: 30</div>
+    <div id="contador"></div> <!-- Contador para mostrar el tiempo de espera -->
+  </div>
+
+  <script>
+    let puntuacion = 0;
+    let num1, num2, resultadoCorrecto;
+    let tiempoRestante = 30;
+    let timer;
+    let respuestasCorrectas = 0;
+    let nivel = 1;
+
+    function generarPregunta() {
+      num1 = Math.floor(Math.random() * (nivel * 100)) + 1;
+      num2 = Math.floor(Math.random() * (nivel * 100)) + 1;
+      resultadoCorrecto = num1 + num2;
+      document.getElementById("pregunta").textContent = "¿Cuánto es " + num1 + " + " + num2 + "?";
+      document.getElementById("respuesta").value = "";
+      document.getElementById("resultado").textContent = "";
+      tiempoRestante = 30;
+      document.getElementById("temporizador").textContent = "Tiempo restante: " + tiempoRestante;
+      clearInterval(timer);
+      iniciarTemporizador();
+    }
+
+    function iniciarTemporizador() {
+      timer = setInterval(() => {
+        tiempoRestante--;
+        document.getElementById("temporizador").textContent = "Tiempo restante: " + tiempoRestante;
+        if (tiempoRestante <= 0) {
+          clearInterval(timer);
+          document.getElementById("resultado").textContent = "¡Tiempo agotado!";
+          if (puntuacion > 0) {
+            puntuacion--;
+          }
+          document.getElementById("puntuacion").textContent = "Puntuación: " + puntuacion;
+          generarPregunta();
+        }
+      }, 1000);
+    }
+
+    document.getElementById("boton").addEventListener("click", function() {
+      // Iniciar música al presionar el botón "Comprobar"
+      var musica = document.getElementById("musica");
+      musica.play().catch(function(error) {
+        console.log("Error al reproducir la música: ", error);
+      });
+
+      let respuestaUsuario = parseInt(document.getElementById("respuesta").value);
+      clearInterval(timer);
+      document.getElementById("resultado").classList.remove("correcto", "incorrecto"); // Limpiar clases de resultado
+      if (respuestaUsuario === resultadoCorrecto) {
+        // Elimina la línea que muestra el texto "¡Correcto!"
+        // document.getElementById("resultado").textContent = "¡Correcto!"; // Agregar "¡Correcto!" en verde
+        document.getElementById("resultado").classList.add("correcto"); // Clase correcta
+        puntuacion++;
+        respuestasCorrectas++;
+        document.getElementById("sonido-correcto").play(); // Reproducir sonido correcto
+        generarPregunta(); // Generar nueva pregunta inmediatamente
+      } else {
+        document.getElementById("resultado").textContent = "Incorrecto."; // Mantener "Incorrecto." en rojo
+        document.getElementById("resultado").classList.add("incorrecto"); // Clase incorrecta
+        // Asegurarse de que la puntuación no baje de 0
+        if (puntuacion > 0) {
+          puntuacion--;
+        }
+        document.getElementById("sonido-incorrecto").play(); // Reproducir sonido incorrecto
+        
+        // Deshabilitar el botón y mostrar el contador
+        const boton = document.getElementById("boton");
+        boton.disabled = true;
+        document.getElementById("contador").style.display = 'block'; // Mostrar contador
+        let tiempoEspera = 2; // 2 segundos de espera
+        document.getElementById("contador").textContent = "Esperando " + tiempoEspera + " segundos...";
+        
+        // Contador de 2 segundos
+        const intervaloContador = setInterval(() => {
+          tiempoEspera--;
+          document.getElementById("contador").textContent = "Esperando " + tiempoEspera + " segundos...";
+          if (tiempoEspera <= 0) {
+            clearInterval(intervaloContador);
+            boton.disabled = false; // Habilitar el botón nuevamente
+            document.getElementById("contador").style.display = 'none'; // Ocultar contador
+            generarPregunta(); // Generar nueva pregunta después de 2 segundos
+          }
+        }, 1000);
+      }
+      document.getElementById("puntuacion").textContent = "Puntuación: " + puntuacion;
+
+      // Comprobar si se debe cambiar de nivel
+      if (respuestasCorrectas === 10 && nivel === 1) {
+        nivel++;
+        respuestasCorrectas = 0; // Reiniciar respuestas correctas
+        alert("¡Has pasado al Nivel 2!");
+      } else if (respuestasCorrectas === 20 && nivel === 2) {
+        nivel++;
+        respuestasCorrectas = 0; // Reiniciar respuestas correctas
+        alert("¡Has pasado al Nivel 3!");
+      } else if (respuestasCorrectas === 30 && nivel === 3) {
+        clearInterval(timer);
+        alert("¡Juego terminado! Tu puntuación final es: " + puntuacion);
+        document.getElementById("pregunta").textContent = "";
+        document.getElementById("respuesta").style.display = 'none';
+        document.getElementById("boton").style.display = 'none';
+        return; // Terminar el juego
+      }
+    });
+
+    document.getElementById("boton-pausar").addEventListener("click", function() {
+      var musica = document.getElementById("musica");
+      if (musica.paused) {
+        musica.play();
+        this.textContent = "Pausar Música";
+      } else {
+        musica.pause();
+        this.textContent = "Reanudar Música";
+      }
+    });
+
+    generarPregunta();
+  </script>
+
+</body>
+</html>
